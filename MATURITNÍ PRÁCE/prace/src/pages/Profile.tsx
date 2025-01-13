@@ -1,142 +1,200 @@
-import React, { useState } from 'react';
-import { User } from '../types';
-import { Camera, Save } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { BasicInfoSection } from "@/components/profile/BasicInfoSection";
+import { ContactPrivacySection } from "@/components/profile/ContactPrivacySection";
+import { InterestsSection } from "@/components/InterestsSection";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
-export default function Profile() {
-  const [profile, setProfile] = useState<Partial<User>>({
-    name: 'Jan Novák',
-    email: 'jan.novak@email.cz',
-    university: 'ČVUT',
-    interests: ['sport', 'cestování'],
-    bio: 'Student informatiky hledající spolubydlící.'
-  });
+const Profile = () => {
+  const navigate = useNavigate();
+  const [userId, setUserId] = useState<string>("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [university, setUniversity] = useState("");
+  const [bio, setBio] = useState("");
+  const [age, setAge] = useState<number | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [showInRoommates, setShowInRoommates] = useState(true);
+  const [interests, setInterests] = useState<string[]>([]);
+  const [instagramHandle, setInstagramHandle] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
-  const [newInterest, setNewInterest] = useState('');
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
 
-  const handleAddInterest = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newInterest.trim() && profile.interests) {
-      setProfile({
-        ...profile,
-        interests: [...profile.interests, newInterest.trim()]
+        if (!session) {
+          console.log("No active session found, redirecting to auth");
+          navigate("/auth");
+          return;
+        }
+
+        console.log("Session found, loading profile data");
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) throw userError;
+
+        if (!user) {
+          console.log("No user found, redirecting to auth");
+          navigate("/auth");
+          return;
+        }
+
+        setUserId(user.id);
+        setEmail(user.email || "");
+
+        console.log("Fetching profile data for user:", user.id);
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        if (profile) {
+          console.log("Profile data loaded:", profile);
+          setFirstName(profile.first_name || "");
+          setLastName(profile.last_name || "");
+          setUniversity(profile.university || "");
+          setBio(profile.bio || "");
+          setAge(profile.age);
+          setAvatarUrl(profile.avatar_url);
+          setShowInRoommates(profile.show_in_roommates ?? true);
+          setInstagramHandle(profile.instagram_handle || "");
+        }
+
+        const { data: userInterests, error: interestsError } = await supabase
+          .from("user_interests")
+          .select("interest")
+          .eq("profile_id", user.id);
+
+        if (interestsError) throw interestsError;
+
+        if (userInterests) {
+          console.log("User interests loaded:", userInterests);
+          setInterests(userInterests.map(i => i.interest));
+        }
+      } catch (error) {
+        console.error("Error in profile setup:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load profile data. Please try logging in again.",
+        });
+        navigate("/auth");
+      }
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event);
+      if (event === 'SIGNED_OUT') {
+        navigate("/auth");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, toast]);
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      console.log("Saving profile changes...");
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          first_name: firstName,
+          last_name: lastName,
+          university,
+          bio,
+          age,
+          avatar_url: avatarUrl,
+          show_in_roommates: showInRoommates,
+          instagram_handle: instagramHandle,
+        })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Změny uloženy",
+        description: "Váš profil byl úspěšně aktualizován.",
       });
-      setNewInterest('');
+      console.log("Profile updated successfully");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        variant: "destructive",
+        title: "Chyba při ukládání",
+        description: "Nepodařilo se uložit změny profilu. Prosím zkuste to znovu.",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleRemoveInterest = (interestToRemove: string) => {
-    if (profile.interests) {
-      setProfile({
-        ...profile,
-        interests: profile.interests.filter(interest => interest !== interestToRemove)
-      });
-    }
-  };
+  if (!userId) {
+    return null;
+  }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center">
-                <Camera className="w-8 h-8" />
-              </div>
-              <button className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow-lg">
-                <Camera className="w-4 h-4 text-blue-600" />
-              </button>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">{profile.name}</h1>
-              <p className="text-white/80">{profile.email}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Jméno a příjmení
-            </label>
-            <input
-              type="text"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={profile.name}
-              onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Univerzita
-            </label>
-            <input
-              type="text"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={profile.university}
-              onChange={(e) => setProfile({ ...profile, university: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              O mně
-            </label>
-            <textarea
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              rows={4}
-              value={profile.bio}
-              onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Zájmy
-            </label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {profile.interests?.map((interest) => (
-                <span
-                  key={interest}
-                  className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-1"
-                >
-                  {interest}
-                  <button
-                    onClick={() => handleRemoveInterest(interest)}
-                    className="hover:text-blue-600"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-            <form onSubmit={handleAddInterest} className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Přidat zájem..."
-                className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                value={newInterest}
-                onChange={(e) => setNewInterest(e.target.value)}
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Přidat
-              </button>
-            </form>
-          </div>
-
-          <div className="pt-4 border-t">
-            <button
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-md hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+    <div className="min-h-screen bg-gray-50 pt-16">
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Nastavení profilu</h1>
+        <div className="space-y-8">
+          <BasicInfoSection
+            userId={userId}
+            firstName={firstName}
+            lastName={lastName}
+            university={university}
+            bio={bio}
+            age={age}
+            avatarUrl={avatarUrl}
+            instagramHandle={instagramHandle}
+            onFirstNameChange={setFirstName}
+            onLastNameChange={setLastName}
+            onUniversityChange={setUniversity}
+            onBioChange={setBio}
+            onAgeChange={setAge}
+            onAvatarUrlChange={setAvatarUrl}
+            onInstagramHandleChange={setInstagramHandle}
+          />
+          <ContactPrivacySection
+            userId={userId}
+            email={email}
+            showInRoommates={showInRoommates}
+            onShowInRoommatesChange={setShowInRoommates}
+          />
+          <InterestsSection
+            userId={userId}
+            initialInterests={interests}
+            onInterestsUpdate={setInterests}
+          />
+          <div className="flex justify-end pt-4">
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving}
+              className="w-full sm:w-auto"
             >
-              <Save className="w-4 h-4" />
-              Uložit změny
-            </button>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSaving ? "Ukládání..." : "Uložit změny"}
+            </Button>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Profile;

@@ -1,0 +1,24 @@
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.page-container {
+  padding-top: 64px; /* Height of the navbar */
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #ffffff, #f8fafc);
+}
+
+.content-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+@media (max-width: 640px) {
+  .content-container {
+    padding: 1rem;
+  }
+}

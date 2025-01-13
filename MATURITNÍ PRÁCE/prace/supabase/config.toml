@@ -1,0 +1,5 @@
+# Project ID from the Supabase project settings
+project_id = "qkvgysypnkfchisoqffx"
+
+[functions.create-listing-subscription]
+verify_jwt = true

@@ -1,30 +1,70 @@
-import React from 'react';
+import { GraduationCap, Home, Users } from "lucide-react";
 
-export default function About() {
+const About = () => {
   return (
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">O nás</h1>
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <p className="text-gray-700 mb-4">
-          Fair Estate je platforma vytvořená s cílem usnadnit studentům hledání ideálního bydlení během jejich studia. 
-          Spojujeme studenty s pronajímateli a vytváříme komunitu, kde si studenti mohou najít nejen bydlení, 
-          ale i nové přátele se společnými zájmy.
-        </p>
-        <p className="text-gray-700 mb-4">
-          Naše služba je dostupná ve třech největších univerzitních městech České republiky - Praze, Brně a Ostravě. 
-          Nabízíme jak celé byty, tak jednotlivé pokoje, abychom vyhověli různým preferencím a rozpočtům.
-        </p>
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Proč Fair Estate?</h2>
-          <ul className="list-disc list-inside space-y-2 text-gray-700">
-            <li>Ověření pronajímatelé a kvalitní nabídky</li>
-            <li>Možnost najít spolubydlící se stejnými zájmy</li>
-            <li>Přehledné filtrování nabídek</li>
-            <li>Bezpečná komunikace mezi studenty a pronajímateli</li>
-            <li>Pravidelně aktualizovaná databáze nabídek</li>
-          </ul>
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-12">
+      <div className="container mx-auto px-4">
+        <div className="max-w-3xl mx-auto space-y-8">
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              O Fair Estate
+            </h1>
+            <p className="text-xl text-gray-600">
+              Usnadňujeme studentům cestu k ideálnímu bydlení
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
+            <p className="text-lg text-gray-700 leading-relaxed">
+              V Fair Estate věříme, že hledání studentského bydlení by mělo být jednoduché a příjemné. 
+              Naše platforma vznikla s jediným cílem - pomoci studentům najít perfektní bydlení 
+              a ideální spolubydlící pro nezapomenutelná studentská léta.
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-6 mt-8">
+              <div className="text-center space-y-3">
+                <div className="mx-auto w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full">
+                  <Home className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-gray-900">Snadné hledání</h3>
+                <p className="text-gray-600">
+                  Přehledný katalog bytů a pokojů speciálně pro studenty
+                </p>
+              </div>
+
+              <div className="text-center space-y-3">
+                <div className="mx-auto w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full">
+                  <Users className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-gray-900">Spolubydlící</h3>
+                <p className="text-gray-600">
+                  Najděte si spolubydlící se stejnými zájmy a životním stylem
+                </p>
+              </div>
+
+              <div className="text-center space-y-3">
+                <div className="mx-auto w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full">
+                  <GraduationCap className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-gray-900">Pro studenty</h3>
+                <p className="text-gray-600">
+                  Platforma vytvořená na míru potřebám studentů
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 text-lg text-gray-700 leading-relaxed">
+              <p>
+                Naše komunita neustále roste a pomáhá studentům po celé České republice najít 
+                to pravé místo k životu během studia. Ať už hledáte samostatný byt, pokoj ve 
+                sdíleném bytě nebo spolubydlící, Fair Estate je tu pro vás.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default About;
