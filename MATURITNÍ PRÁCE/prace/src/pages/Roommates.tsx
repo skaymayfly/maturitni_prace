@@ -85,29 +85,37 @@ const Roommates = () => {
   );
 
   return (
-    <div className="page-container">
-      <div className="content-container">
-        <div className="mb-8 bg-white/80 backdrop-blur-md p-4 rounded-lg shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="search">Search</Label>
-              <Input 
-                id="search" 
-                placeholder="Search by name or university" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8 bg-white/80 backdrop-blur-md p-6 rounded-lg shadow-sm border border-purple-100">
+          <div className="max-w-md mx-auto">
+            <Label htmlFor="search" className="text-lg font-medium text-gray-700 mb-2 block">
+              Vyhledat spolubydlící
+            </Label>
+            <Input 
+              id="search" 
+              placeholder="Hledat podle jména nebo univerzity" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border-purple-100 focus:border-primary/50 transition-colors"
+            />
           </div>
         </div>
 
         {loading ? (
-          <div className="text-center text-gray-500">Loading profiles...</div>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
             {filteredProfiles.map((profile) => (
               <RoommateCard key={profile.id} profile={profile} />
             ))}
+            {filteredProfiles.length === 0 && (
+              <div className="col-span-full text-center py-12 text-gray-500">
+                Žádní spolubydlící nenalezeni
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -3,43 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyFilters } from "@/components/PropertyFilters";
 import { supabase } from "@/integrations/supabase/client";
-
-const SAMPLE_PROPERTIES = [
-  {
-    id: 1,
-    title: "Modern Studio in City Center",
-    description: "Beautiful studio apartment perfect for students. Fully furnished with modern amenities.",
-    price: 500,
-    size: 30,
-    location: "Prague",
-    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3",
-    ownerId: "00000000-0000-0000-0000-000000000000" // Added sample owner ID
-  },
-  {
-    id: 2,
-    title: "Cozy 2-Bedroom Apartment",
-    description: "Spacious apartment near university campus. Great for sharing with a roommate.",
-    price: 800,
-    size: 65,
-    location: "Brno",
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3",
-    ownerId: "00000000-0000-0000-0000-000000000000" // Added sample owner ID
-  },
-  {
-    id: 3,
-    title: "Student House Share",
-    description: "Room available in a friendly student house. All bills included.",
-    price: 350,
-    size: 20,
-    location: "Ostrava",
-    image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?ixlib=rb-4.0.3",
-    ownerId: "00000000-0000-0000-0000-000000000000" // Added sample owner ID
-  },
-];
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
-  const [filteredProperties, setFilteredProperties] = useState(SAMPLE_PROPERTIES);
+  const [filteredProperties, setFilteredProperties] = useState([]);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -54,6 +23,28 @@ const Index = () => {
         if (!session) {
           console.log('No session found, redirecting to auth');
           navigate('/auth');
+          return;
+        }
+
+        // Check if user has a profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          return;
+        }
+
+        if (!profile) {
+          console.log('No profile found, redirecting to profile setup');
+          toast({
+            title: "Vítejte!",
+            description: "Prosím nastavte si nejdříve svůj profil.",
+          });
+          navigate('/profile');
           return;
         }
 
@@ -74,7 +65,7 @@ const Index = () => {
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleFilterChange = (filters: any) => {
     // Filter logic would go here
@@ -98,7 +89,7 @@ const Index = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProperties.map((property) => (
+          {filteredProperties.map((property: any) => (
             <PropertyCard 
               key={property.id}
               {...property}

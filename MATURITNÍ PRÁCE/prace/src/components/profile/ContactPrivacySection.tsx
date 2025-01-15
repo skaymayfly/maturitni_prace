@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { Link } from "react-router-dom";
 
 interface ContactPrivacySectionProps {
   userId: string;
@@ -98,13 +99,22 @@ export const ContactPrivacySection = ({
           disabled
           className="bg-gray-100"
         />
-        <Button
-          variant="outline"
-          onClick={handlePasswordReset}
-          className="mt-2"
-        >
-          Resetovat heslo
-        </Button>
+        <div className="flex gap-2 mt-2">
+          <Button
+            variant="outline"
+            onClick={handlePasswordReset}
+          >
+            Resetovat heslo
+          </Button>
+          <Button
+            variant="outline"
+            asChild
+          >
+            <Link to="/change-password">
+              Změnit heslo
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center justify-between">

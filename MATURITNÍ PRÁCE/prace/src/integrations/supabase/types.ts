@@ -36,7 +36,7 @@ export type Database = {
           instagram_handle: string | null
           last_name: string | null
           name: string | null
-          role: string
+          role: Database["public"]["Enums"]["user_role"]
           show_in_roommates: boolean | null
           university: string | null
           updated_at: string | null
@@ -52,7 +52,7 @@ export type Database = {
           instagram_handle?: string | null
           last_name?: string | null
           name?: string | null
-          role: string
+          role: Database["public"]["Enums"]["user_role"]
           show_in_roommates?: boolean | null
           university?: string | null
           updated_at?: string | null
@@ -68,7 +68,7 @@ export type Database = {
           instagram_handle?: string | null
           last_name?: string | null
           name?: string | null
-          role?: string
+          role?: Database["public"]["Enums"]["user_role"]
           show_in_roommates?: boolean | null
           university?: string | null
           updated_at?: string | null
@@ -238,7 +238,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "user" | "admin" | "student"
     }
     CompositeTypes: {
       [_ in never]: never

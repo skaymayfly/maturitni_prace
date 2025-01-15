@@ -7,38 +7,90 @@ import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import About from "./pages/About";
 import { CreateListing } from "./pages/CreateListing";
+import ChangePassword from "./pages/ChangePassword";
 import { Toaster } from "./components/ui/toaster";
 import { supabase } from "@/integrations/supabase/client";
-import "./App.css";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useLocation();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setIsAuthenticated(!!session);
+        setIsLoading(true);
+        
+        // Get current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          setIsAuthenticated(false);
+          return;
+        }
+
+        // If no session, user is not authenticated
+        if (!session) {
+          console.log("No active session found");
+          setIsAuthenticated(false);
+          return;
+        }
+
+        // Verify the session is still valid
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          console.error("User verification error:", userError);
+          setIsAuthenticated(false);
+          return;
+        }
+
+        console.log("Session verified, user authenticated:", user?.id);
+        setIsAuthenticated(true);
 
         // Subscribe to auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
           console.log("Auth state changed:", event, session);
-          setIsAuthenticated(!!session);
+          
+          if (event === 'SIGNED_OUT') {
+            console.log("User signed out");
+            setIsAuthenticated(false);
+            return;
+          }
+          
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            console.log("User signed in or token refreshed");
+            setIsAuthenticated(true);
+            return;
+          }
+
+          // Handle other auth events
+          if (event === 'USER_UPDATED' || event === 'INITIAL_SESSION') {
+            console.log("User updated or initial session");
+            setIsAuthenticated(!!session);
+          }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+          subscription.unsubscribe();
+        };
       } catch (error) {
-        console.error("Error checking auth:", error);
+        console.error("Error in auth check:", error);
         setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, []);
+  }, [navigate]);
 
-  // Show nothing while checking authentication
-  if (isAuthenticated === null) {
-    return null;
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>;
   }
 
   // Redirect to auth if not authenticated
@@ -97,6 +149,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/change-password"
+            element={
+              <ProtectedRoute>
+                <ChangePassword />
               </ProtectedRoute>
             }
           />

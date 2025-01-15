@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface InterestsSectionProps {
   userId: string;
@@ -16,15 +16,51 @@ interface InterestsSectionProps {
 export const InterestsSection = ({ userId, initialInterests, onInterestsUpdate }: InterestsSectionProps) => {
   const [interests, setInterests] = useState<string[]>(initialInterests);
   const [newInterest, setNewInterest] = useState("");
+  const [isProfileCreated, setIsProfileCreated] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const checkProfile = async () => {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error checking profile:', error);
+          return;
+        }
+
+        setIsProfileCreated(!!profile);
+      } catch (error) {
+        console.error('Error in profile check:', error);
+      }
+    };
+
+    checkProfile();
+  }, [userId]);
 
   const addInterest = async () => {
     if (!newInterest.trim()) return;
+
+    if (!isProfileCreated) {
+      toast({
+        variant: "destructive",
+        title: "Chyba",
+        description: "Nejdříve prosím uložte svůj profil.",
+      });
+      return;
+    }
     
     try {
       const { error } = await supabase
         .from('user_interests')
-        .insert({ profile_id: userId, interest: newInterest.trim() });
+        .insert({
+          profile_id: userId,
+          interest: newInterest.trim()
+        });
 
       if (error) throw error;
 
@@ -34,20 +70,29 @@ export const InterestsSection = ({ userId, initialInterests, onInterestsUpdate }
       setNewInterest("");
       
       toast({
-        title: "Interest added",
-        description: "Your interest has been added successfully.",
+        title: "Zájem přidán",
+        description: "Váš zájem byl úspěšně přidán.",
       });
     } catch (error) {
       console.error('Error adding interest:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to add interest.",
+        title: "Chyba",
+        description: "Nepodařilo se přidat zájem.",
       });
     }
   };
 
   const removeInterest = async (interestToRemove: string) => {
+    if (!isProfileCreated) {
+      toast({
+        variant: "destructive",
+        title: "Chyba",
+        description: "Nejdříve prosím uložte svůj profil.",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('user_interests')
@@ -62,27 +107,27 @@ export const InterestsSection = ({ userId, initialInterests, onInterestsUpdate }
       onInterestsUpdate(updatedInterests);
       
       toast({
-        title: "Interest removed",
-        description: "Your interest has been removed successfully.",
+        title: "Zájem odebrán",
+        description: "Váš zájem byl úspěšně odebrán.",
       });
     } catch (error) {
       console.error('Error removing interest:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to remove interest.",
+        title: "Chyba",
+        description: "Nepodařilo se odebrat zájem.",
       });
     }
   };
 
   return (
     <div className="space-y-4">
-      <Label>Interests</Label>
+      <Label>Zájmy</Label>
       <div className="flex gap-2">
         <Input
           value={newInterest}
           onChange={(e) => setNewInterest(e.target.value)}
-          placeholder="Add a new interest"
+          placeholder="Přidat nový zájem"
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -90,7 +135,7 @@ export const InterestsSection = ({ userId, initialInterests, onInterestsUpdate }
             }
           }}
         />
-        <Button onClick={addInterest}>Add</Button>
+        <Button onClick={addInterest}>Přidat</Button>
       </div>
       <div className="flex flex-wrap gap-2">
         {interests.map((interest, index) => (

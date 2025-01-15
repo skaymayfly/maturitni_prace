@@ -26,27 +26,63 @@ export const CreateListingForm = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error || !session) {
-        console.log("No active session, redirecting to auth");
-        navigate("/auth");
-        return;
-      }
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error || !session) {
+          console.log("No active session, redirecting to auth");
+          navigate("/auth");
+          return;
+        }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('contact')
-        .eq('id', session.user.id)
-        .single();
+        // First check if profile exists
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
 
-      if (profile?.contact) {
-        setFormData(prev => ({ ...prev, contact: profile.contact }));
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          return;
+        }
+
+        if (!profile) {
+          console.log("No profile found, creating one");
+          const { error: createError } = await supabase
+            .from('profiles')
+            .insert([{
+              id: session.user.id,
+              role: "user",
+              contact: formData.contact || null,
+              first_name: null,
+              last_name: null
+            }]);
+
+          if (createError) {
+            console.error("Error creating profile:", createError);
+            toast({
+              variant: "destructive",
+              title: "Chyba",
+              description: "Nepodařilo se vytvořit profil",
+            });
+            return;
+          }
+        } else if (profile.contact) {
+          setFormData(prev => ({ ...prev, contact: profile.contact }));
+        }
+      } catch (error) {
+        console.error("Error in checkAuth:", error);
+        toast({
+          variant: "destructive",
+          title: "Chyba",
+          description: "Nastala chyba při kontrole profilu",
+        });
       }
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, toast, formData.contact]);
 
   const handleFormChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));

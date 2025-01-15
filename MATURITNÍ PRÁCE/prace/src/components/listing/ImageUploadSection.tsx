@@ -57,21 +57,21 @@ export const ImageUploadSection = ({ imageUrls, onImagesChange }: ImageUploadSec
   };
 
   return (
-    <div className="space-y-2">
-      <Label>Fotografie nemovitosti (minimálně 2)</Label>
+    <div className="space-y-4">
+      <Label className="text-lg font-medium text-gray-700">Fotografie nemovitosti (minimálně 2)</Label>
       <div className="flex flex-wrap gap-4">
         {imageUrls.map((url, index) => (
-          <div key={url} className="relative">
+          <div key={url} className="relative group animate-fade-in">
             <img
               src={url}
               alt={`Náhled nemovitosti ${index + 1}`}
-              className="w-24 h-24 object-cover rounded-lg"
+              className="w-24 h-24 object-cover rounded-lg shadow-md group-hover:shadow-lg transition-all duration-200"
             />
             <Button
               type="button"
               variant="destructive"
               size="icon"
-              className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+              className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
               onClick={() => removeImage(index)}
             >
               <X className="h-4 w-4" />
@@ -81,7 +81,7 @@ export const ImageUploadSection = ({ imageUrls, onImagesChange }: ImageUploadSec
         <Button
           type="button"
           variant="outline"
-          className="relative h-24 w-24"
+          className="relative h-24 w-24 border-2 border-dashed border-purple-200 hover:border-primary/50 transition-colors duration-200 bg-white/50 hover:bg-white/80"
           disabled={isUploading}
         >
           <input
@@ -91,7 +91,7 @@ export const ImageUploadSection = ({ imageUrls, onImagesChange }: ImageUploadSec
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             disabled={isUploading}
           />
-          <ImagePlus className="h-6 w-6" />
+          <ImagePlus className="h-6 w-6 text-gray-400" />
         </Button>
       </div>
     </div>
